@@ -21,6 +21,7 @@ type QueryPage struct {
 
 var baseQueries = []Query{
 	Query{"All Events", "true", ""},
+	Query{"Paging Events", ".check.page == true", ""},
 	Query{"---", "", ""}, // no-op line in UI
 }
 

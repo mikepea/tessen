@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Netflix-Skunkworks/go-jira"
 	ui "github.com/gizak/termui"
 	"github.com/mitchellh/go-wordwrap"
 	"gopkg.in/coryb/yaml.v2"
@@ -62,9 +61,38 @@ func parseYaml(file string, v map[string]interface{}) {
 	}
 }
 
+func FindParentPaths(fileName string) []string {
+	cwd, _ := os.Getwd()
+
+	paths := make([]string, 0)
+
+	// special case if homedir is not in current path then check there anyway
+	homedir := os.Getenv("HOME")
+	if !strings.HasPrefix(cwd, homedir) {
+		file := fmt.Sprintf("%s/%s", homedir, fileName)
+		if _, err := os.Stat(file); err == nil {
+			paths = append(paths, file)
+		}
+	}
+
+	var dir string
+	for _, part := range strings.Split(cwd, string(os.PathSeparator)) {
+		if dir == "/" {
+			dir = fmt.Sprintf("/%s", part)
+		} else {
+			dir = fmt.Sprintf("%s/%s", dir, part)
+		}
+		file := fmt.Sprintf("%s/%s", dir, fileName)
+		if _, err := os.Stat(file); err == nil {
+			paths = append(paths, file)
+		}
+	}
+	return paths
+}
+
 func loadConfigs(opts map[string]interface{}) {
-	paths := jira.FindParentPaths(".uchiwa-ui.d/config.yml")
-	paths = append([]string{"/etc/go-uchiwa-ui.yml"}, paths...)
+	paths := FindParentPaths(".tessen.d/config.yml")
+	paths = append([]string{"/etc/tessen.yml"}, paths...)
 
 	// iterate paths in reverse
 	for i := len(paths) - 1; i >= 0; i-- {
@@ -83,14 +111,12 @@ func loadConfigs(opts map[string]interface{}) {
 }
 
 func getOpts() map[string]interface{} {
-	user := os.Getenv("USER")
 	home := os.Getenv("HOME")
 
 	opts := make(map[string]interface{})
 	defaults := map[string]interface{}{
-		"user":      user,
-		"endpoint":  os.Getenv("JIRA_ENDPOINT"),
-		"directory": fmt.Sprintf("%s/.jira.d/templates", home),
+		"endpoint":  os.Getenv("UCHIWA_ENDPOINT"),
+		"directory": fmt.Sprintf("%s/.tessen.d/templates", home),
 		"quiet":     true,
 	}
 

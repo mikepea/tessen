@@ -189,6 +189,14 @@ General Options:
 		command = "toplevel"
 	}
 
+	opts := getOpts()
+	if e, ok := opts["endpoint"]; e.(string) != "" && ok {
+		eventData, err = FetchUchiwaEvents(e.(string))
+	} else {
+		fmt.Printf("Must set endpoint via options or in .tessen.d/config.yml\n")
+		os.Exit(1)
+	}
+
 	err = ui.Init()
 	if err != nil {
 		panic(err)
@@ -217,7 +225,6 @@ General Options:
 
 	for exitNow != true {
 
-		eventData, err = FetchUchiwaEvents(cliOpts["endpoint"].(string))
 		if err != nil {
 			log.Errorf("%s", err)
 			os.Exit(1)
