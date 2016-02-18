@@ -81,9 +81,9 @@ func (p *QueryResultsPage) Create() {
 	if p.commandBar == nil {
 		p.commandBar = commandBar
 	}
-	//query := p.ActiveQuery.Filter
+	query := p.ActiveQuery.Filter
 	if len(p.cachedResults) == 0 {
-		p.cachedResults = make([]string, 0)
+		p.cachedResults = GetFilteredListOfEvents(query, &eventData)
 	}
 	if p.selectedLine >= len(p.cachedResults) {
 		p.selectedLine = len(p.cachedResults) - 1

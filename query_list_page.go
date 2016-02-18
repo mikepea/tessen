@@ -20,10 +20,7 @@ type QueryPage struct {
 }
 
 var baseQueries = []Query{
-	Query{"My Assigned Tickets", "assignee = currentUser() AND resolution = Unresolved", ""},
-	Query{"My Reported Tickets", "reporter = currentUser() AND resolution = Unresolved", ""},
-	Query{"My Watched Tickets", "watcher = currentUser() AND resolution = Unresolved", ""},
-	Query{"My Voted Tickets", "voter = currentUser() AND resolution = Unresolved", ""},
+	Query{"All Events", "true", ""},
 	Query{"---", "", ""}, // no-op line in UI
 }
 

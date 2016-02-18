@@ -106,6 +106,7 @@ var (
 )
 
 var cliOpts map[string]interface{}
+var eventData []map[string]interface{}
 
 func Run() {
 
@@ -215,6 +216,12 @@ General Options:
 	}
 
 	for exitNow != true {
+
+		eventData, err = FetchUchiwaEvents(cliOpts["endpoint"].(string))
+		if err != nil {
+			log.Errorf("%s", err)
+			os.Exit(1)
+		}
 
 		currentPage.Create()
 		ui.Loop()
