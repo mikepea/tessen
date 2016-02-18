@@ -12,10 +12,6 @@ import (
 	"gopkg.in/coryb/yaml.v2"
 )
 
-func HelpTextAsStrings(data interface{}, templateName string) []string {
-	return strings.Split("", "\n")
-}
-
 func WrapText(lines []string, maxWidth uint) []string {
 	out := make([]string, 0)
 	insideNoformatBlock := false

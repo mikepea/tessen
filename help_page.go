@@ -1,6 +1,8 @@
 package tessen
 
 import (
+	"strings"
+
 	ui "github.com/gizak/termui"
 )
 
@@ -10,9 +12,17 @@ type HelpPage struct {
 	StatusBarFragment
 }
 
+func HelpTextAsStrings(data interface{}, templateName string) []interface{} {
+	results := make([]interface{}, 0)
+	for _, v := range strings.Split("", "\n") {
+		results = append(results, v)
+	}
+	return results
+}
+
 func (p *HelpPage) Search() {
 	s := p.ActiveSearch
-	n := len(p.cachedResults)
+	n := len(p.cachedResults.([]interface{}))
 	if s.command == "" {
 		return
 	}
@@ -24,7 +34,8 @@ func (p *HelpPage) Search() {
 	// adding 'n' means we never have '-1 % n'.
 	startLine := (p.selectedLine + n + increment) % n
 	for i := startLine; i != p.selectedLine; i = (i + increment + n) % n {
-		if s.re.MatchString(p.cachedResults[i]) {
+		cr := p.cachedResults.([]interface{})[i]
+		if s.re.MatchString(cr.(string)) {
 			p.SetSelectedLine(i)
 			p.Update()
 			break
@@ -35,16 +46,6 @@ func (p *HelpPage) Search() {
 func (p *HelpPage) GoBack() {
 	currentPage = previousPage
 	changePage()
-}
-
-func (p *HelpPage) Refresh() {
-	pDeref := &p
-	q := *pDeref
-	q.cachedResults = make([]string, 0)
-	helpPage = q
-	currentPage = helpPage
-	changePage()
-	q.Create()
 }
 
 func (p *HelpPage) Update() {
@@ -66,10 +67,10 @@ func (p *HelpPage) Create() {
 	if p.commandBar == nil {
 		p.commandBar = commandBar
 	}
-	if len(p.cachedResults) == 0 {
+	if p.cachedResults == nil {
 		p.cachedResults = HelpTextAsStrings(nil, "jira_ui_help")
 	}
-	p.displayLines = make([]string, len(p.cachedResults))
+	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	ls.ItemFgColor = ui.ColorYellow
 	ls.BorderLabel = "Help"
 	ls.Height = ui.TermHeight() - 2

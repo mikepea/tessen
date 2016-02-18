@@ -24,7 +24,7 @@ type ShowDetailPage struct {
 
 func (p *ShowDetailPage) Search() {
 	s := p.ActiveSearch
-	n := len(p.cachedResults)
+	n := len(p.cachedResults.([]interface{}))
 	if s.command == "" {
 		return
 	}
@@ -36,7 +36,8 @@ func (p *ShowDetailPage) Search() {
 	// adding 'n' means we never have '-1 % n'.
 	startLine := (p.selectedLine + n + increment) % n
 	for i := startLine; i != p.selectedLine; i = (i + increment + n) % n {
-		if s.re.MatchString(p.cachedResults[i]) {
+		cr := p.cachedResults.([]interface{})[i]
+		if s.re.MatchString(cr.(string)) {
 			p.SetSelectedLine(i)
 			p.Update()
 			break
@@ -65,7 +66,8 @@ func (p *ShowDetailPage) PreviousPara() {
 		return
 	}
 	for i := p.selectedLine - 1; i > 0; i-- {
-		if ok, _ := regexp.MatchString(`^\s*$`, p.cachedResults[i]); ok {
+		cr := p.cachedResults.([]interface{})[i]
+		if ok, _ := regexp.MatchString(`^\s*$`, cr.(string)); ok {
 			newDisplayLine = i
 			break
 		}
@@ -74,12 +76,13 @@ func (p *ShowDetailPage) PreviousPara() {
 }
 
 func (p *ShowDetailPage) NextPara() {
-	newDisplayLine := len(p.cachedResults) - 1
+	newDisplayLine := len(p.cachedResults.([]interface{})) - 1
 	if p.selectedLine == newDisplayLine {
 		return
 	}
-	for i := p.selectedLine + 1; i < len(p.cachedResults); i++ {
-		if ok, _ := regexp.MatchString(`^\s*$`, p.cachedResults[i]); ok {
+	for i := p.selectedLine + 1; i < len(p.cachedResults.([]interface{})); i++ {
+		cr := p.cachedResults.([]interface{})[i]
+		if ok, _ := regexp.MatchString(`^\s*$`, cr.(string)); ok {
 			newDisplayLine = i
 			break
 		}
@@ -120,11 +123,6 @@ func (p *ShowDetailPage) Create() {
 	log.Debugf("ShowDetailPage.Create(): self:        %s (%p)", p.Id(), p)
 	log.Debugf("ShowDetailPage.Create(): currentPage: %s (%p)", currentPage.Id(), currentPage)
 	p.opts = getOpts()
-	/*
-		if p.TicketId == "" {
-			p.TicketId = ticketListPage.GetSelectedTicketId()
-		}
-	*/
 	if p.MaxWrapWidth == 0 {
 		if m := p.opts["max_wrap"]; m != nil {
 			p.MaxWrapWidth = uint(m.(int64))
@@ -152,12 +150,12 @@ func (p *ShowDetailPage) Create() {
 			p.apiBody, _ = FetchJiraTicket(p.TicketId)
 		*/
 	}
-	/*
-		p.cachedResults = WrapText(JiraTicketAsStrings(p.apiBody, p.Template), p.WrapWidth)
-	*/
-	p.displayLines = make([]string, len(p.cachedResults))
-	if p.selectedLine >= len(p.cachedResults) {
-		p.selectedLine = len(p.cachedResults) - 1
+	if p.cachedResults == nil {
+		p.cachedResults = make([]interface{}, 0)
+	}
+	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
+	if p.selectedLine >= len(p.cachedResults.([]interface{})) {
+		p.selectedLine = len(p.cachedResults.([]interface{})) - 1
 	}
 	ls.ItemFgColor = ui.ColorYellow
 	ls.Height = ui.TermHeight() - 2

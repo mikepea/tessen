@@ -1,10 +1,20 @@
 package tessen
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"os/exec"
+	"regexp"
+	"strings"
 
 	ui "github.com/gizak/termui"
 )
+
+type QueryResult struct {
+	Id      string
+	Summary string
+}
 
 type QueryResultsPage struct {
 	BaseListPage
@@ -13,9 +23,34 @@ type QueryResultsPage struct {
 	ActiveQuery Query
 }
 
+func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{}) []interface{} {
+	results := make([]interface{}, 0)
+	b, err := json.Marshal(*eventData)
+	if err != nil {
+		log.Errorf("%s", err)
+		return results
+	}
+
+	cmd := exec.Command("jq", fmt.Sprintf(".[] | select( %s ) | ._id", filter))
+	cmd.Stdin = bytes.NewReader(b)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err != nil {
+		log.Errorf("%s", err)
+		return results
+	}
+
+	for _, v := range strings.Split(out.String(), "\n") {
+		results = append(results, QueryResult{v, "WOO" + v})
+	}
+	return results
+
+}
+
 func (p *QueryResultsPage) Search() {
 	s := p.ActiveSearch
-	n := len(p.cachedResults)
+	n := len(p.cachedResults.([]interface{}))
 	if s.command == "" {
 		return
 	}
@@ -27,7 +62,8 @@ func (p *QueryResultsPage) Search() {
 	// adding 'n' means we never have '-1 % n'.
 	startLine := (p.selectedLine + n + increment) % n
 	for i := startLine; i != p.selectedLine; i = (i + increment + n) % n {
-		if s.re.MatchString(p.cachedResults[i]) {
+		cr := p.cachedResults.([]interface{})[i]
+		if s.re.MatchString(cr.(QueryResult).Summary) {
 			p.SetSelectedLine(i)
 			p.Update()
 			break
@@ -36,7 +72,7 @@ func (p *QueryResultsPage) Search() {
 }
 
 func (p *QueryResultsPage) SelectItem() {
-	if len(p.cachedResults) == 0 {
+	if len(p.cachedResults.([]interface{})) == 0 {
 		return
 	}
 	q := new(ShowDetailPage)
@@ -63,10 +99,29 @@ func (p *QueryResultsPage) Update() {
 func (p *QueryResultsPage) Refresh() {
 	pDeref := &p
 	q := *pDeref
-	q.cachedResults = make([]string, 0)
+	q.cachedResults = make([]interface{}, 0)
 	queryResultsPage = q
 	changePage()
 	q.Create()
+}
+
+func (p *QueryResultsPage) markActiveLine() {
+	for i, v := range p.cachedResults.([]interface{}) {
+		selected := ""
+		s := v.(QueryResult).Summary
+		if i == p.selectedLine {
+			selected = "fg-white,bg-blue"
+			if s == "" {
+				s = " "
+			} else if ok, _ := regexp.MatchString(`\[.+\]\((fg|bg)-[a-z]{1,6}\)`, s); ok {
+				r := regexp.MustCompile(`\[(.*?)\]\((fg|bg)-[a-z]{1,6}\)`)
+				s = r.ReplaceAllString(s, `$1`)
+			}
+			p.displayLines[i] = fmt.Sprintf("[%s](%s)", s, selected)
+		} else {
+			p.displayLines[i] = s
+		}
+	}
 }
 
 func (p *QueryResultsPage) Create() {
@@ -82,13 +137,13 @@ func (p *QueryResultsPage) Create() {
 		p.commandBar = commandBar
 	}
 	query := p.ActiveQuery.Filter
-	if len(p.cachedResults) == 0 {
+	if p.cachedResults == nil {
 		p.cachedResults = GetFilteredListOfEvents(query, &eventData)
 	}
-	if p.selectedLine >= len(p.cachedResults) {
-		p.selectedLine = len(p.cachedResults) - 1
+	if p.selectedLine >= len(p.cachedResults.([]interface{})) {
+		p.selectedLine = len(p.cachedResults.([]interface{})) - 1
 	}
-	p.displayLines = make([]string, len(p.cachedResults))
+	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	ls.ItemFgColor = ui.ColorYellow
 	ls.BorderLabel = fmt.Sprintf("%s: %s", p.ActiveQuery.Name, p.ActiveQuery.Filter)
 	ls.Height = ui.TermHeight() - 2

@@ -17,7 +17,7 @@ type BaseListPage struct {
 	selectedLine     int
 	uiList           *ui.List
 	displayLines     []string
-	cachedResults    []string
+	cachedResults    interface{}
 	firstDisplayLine int
 	isPopulated      bool
 	ActiveSearch     Search
@@ -50,7 +50,7 @@ func (p *BaseListPage) SetSearch(searchCommand string) {
 }
 
 func (p *BaseListPage) IsPopulated() bool {
-	if len(p.cachedResults) > 0 || p.isPopulated {
+	if len(p.cachedResults.([]interface{})) > 0 || p.isPopulated {
 		return true
 	} else {
 		return false
@@ -108,7 +108,7 @@ func (p *BaseListPage) TopOfPage() {
 }
 
 func (p *BaseListPage) BottomOfPage() {
-	p.selectedLine = len(p.cachedResults) - 1
+	p.selectedLine = len(p.cachedResults.([]interface{})) - 1
 	firstLine := p.selectedLine - (p.uiList.Height - 3)
 	if firstLine > 0 {
 		p.firstDisplayLine = firstLine
@@ -122,26 +122,27 @@ func (p *BaseListPage) lastDisplayedLine() int {
 }
 
 func (p *BaseListPage) SetSelectedLine(line int) {
-	if line > 0 && line < len(p.cachedResults) {
+	if line > 0 && line < len(p.cachedResults.([]interface{})) {
 		p.selectedLine = line
 		p.FixFirstDisplayLine(0)
 	}
 }
 
 func (p *BaseListPage) markActiveLine() {
-	for i, v := range p.cachedResults {
+	for i, v := range p.cachedResults.([]interface{}) {
 		selected := ""
+		s := v.(string)
 		if i == p.selectedLine {
 			selected = "fg-white,bg-blue"
-			if v == "" {
-				v = " "
-			} else if ok, _ := regexp.MatchString(`\[.+\]\((fg|bg)-[a-z]{1,6}\)`, v); ok {
+			if s == "" {
+				s = " "
+			} else if ok, _ := regexp.MatchString(`\[.+\]\((fg|bg)-[a-z]{1,6}\)`, s); ok {
 				r := regexp.MustCompile(`\[(.*?)\]\((fg|bg)-[a-z]{1,6}\)`)
-				v = r.ReplaceAllString(v, `$1`)
+				s = r.ReplaceAllString(s, `$1`)
 			}
-			p.displayLines[i] = fmt.Sprintf("[%s](%s)", v, selected)
+			p.displayLines[i] = fmt.Sprintf("[%s](%s)", s, selected)
 		} else {
-			p.displayLines[i] = v
+			p.displayLines[i] = s
 		}
 	}
 }
@@ -160,7 +161,7 @@ func (p *BaseListPage) Update() {
 func (p *BaseListPage) Refresh() {
 	pDeref := &p
 	q := *pDeref
-	q.cachedResults = make([]string, 0)
+	q.cachedResults = make([]interface{}, 0)
 	changePage()
 	q.Create()
 }
@@ -169,8 +170,8 @@ func (p *BaseListPage) Create() {
 	ui.Clear()
 	ls := ui.NewList()
 	p.uiList = ls
-	p.cachedResults = make([]string, 0)
-	p.displayLines = make([]string, len(p.cachedResults))
+	p.cachedResults = make([]interface{}, 0)
+	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	ls.ItemFgColor = ui.ColorYellow
 	ls.BorderLabel = "Updating, please wait"
 	ls.Height = ui.TermHeight()
