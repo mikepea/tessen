@@ -1,4 +1,4 @@
-package jiraui
+package tessen
 
 import (
 	"os"
@@ -18,38 +18,14 @@ func registerKeyboardHandlers() {
 	})
 }
 
-func handleLabelViewKey() {
-	switch page := currentPage.(type) {
-	case *TicketListPage:
-		q := new(LabelListPage)
-		q.ActiveQuery = page.ActiveQuery
-		currentPage = q
-		changePage()
-	}
-}
 func handleQuit() {
 	ui.Close()
 	os.Exit(0)
 }
 
-func handleSortOrderKey() {
-	switch currentPage.(type) {
-	case *TicketListPage:
-		q := new(SortOrderPage)
-		currentPage = q
-		changePage()
-	}
-}
-
 func handleRefreshKey() {
 	if obj, ok := currentPage.(Refresher); ok {
 		obj.Refresh()
-	}
-}
-
-func handleEditKey() {
-	if obj, ok := currentPage.(TicketEditer); ok {
-		obj.EditTicket()
 	}
 }
 
@@ -143,24 +119,8 @@ func handleHelp() {
 func handleNavigateKey(e ui.Event) {
 	key := e.Data.(ui.EvtKbd).KeyStr
 	switch key {
-	case "L":
-		handleLabelViewKey()
-	case "S":
-		handleSortOrderKey()
 	case "C-r":
 		handleRefreshKey()
-	case "E":
-		handleEditKey()
-	case "w":
-		args := []string{"add"}
-		handleWatchCommand(args)
-	case "W":
-		args := []string{"remove"}
-		handleWatchCommand(args)
-	case "v":
-		handleVoteCommand(true)
-	case "V":
-		handleVoteCommand(false)
 	case "q":
 		handleBackKey()
 	case "<enter>":

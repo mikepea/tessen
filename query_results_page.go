@@ -1,21 +1,19 @@
-package jiraui
+package tessen
 
 import (
 	"fmt"
-	"regexp"
 
 	ui "github.com/gizak/termui"
 )
 
-type TicketListPage struct {
+type QueryResultsPage struct {
 	BaseListPage
 	CommandBarFragment
 	StatusBarFragment
 	ActiveQuery Query
-	ActiveSort  Sort
 }
 
-func (p *TicketListPage) Search() {
+func (p *QueryResultsPage) Search() {
 	s := p.ActiveSearch
 	n := len(p.cachedResults)
 	if s.command == "" {
@@ -37,37 +35,24 @@ func (p *TicketListPage) Search() {
 	}
 }
 
-func (p *TicketListPage) ActiveTicketId() string {
-	return p.GetSelectedTicketId()
-}
-
-func (p *TicketListPage) GetSelectedTicketId() string {
-	return findTicketIdInString(p.cachedResults[p.selectedLine])
-}
-
-func (p *TicketListPage) SelectItem() {
+func (p *QueryResultsPage) SelectItem() {
 	if len(p.cachedResults) == 0 {
 		return
 	}
-	q := new(TicketShowPage)
-	q.TicketId = p.GetSelectedTicketId()
+	q := new(ShowDetailPage)
 	currentPage = q
 	q.Create()
 	changePage()
 }
 
-func (p *TicketListPage) GoBack() {
-	currentPage = ticketQueryPage
+func (p *QueryResultsPage) GoBack() {
+	currentPage = queryPage
 	changePage()
 }
 
-func (p *TicketListPage) EditTicket() {
-	runJiraCmdEdit(p.GetSelectedTicketId())
-}
-
-func (p *TicketListPage) Update() {
+func (p *QueryResultsPage) Update() {
 	ls := p.uiList
-	log.Debugf("TicketListPage.Update(): self:        %s (%p), ls: (%p)", p.Id(), p, ls)
+	log.Debugf("QueryResultsPage.Update(): self:        %s (%p), ls: (%p)", p.Id(), p, ls)
 	p.markActiveLine()
 	ls.Items = p.displayLines[p.firstDisplayLine:]
 	ui.Render(ls)
@@ -75,18 +60,18 @@ func (p *TicketListPage) Update() {
 	p.commandBar.Update()
 }
 
-func (p *TicketListPage) Refresh() {
+func (p *QueryResultsPage) Refresh() {
 	pDeref := &p
 	q := *pDeref
 	q.cachedResults = make([]string, 0)
-	ticketListPage = q
+	queryResultsPage = q
 	changePage()
 	q.Create()
 }
 
-func (p *TicketListPage) Create() {
-	log.Debugf("TicketListPage.Create(): self:        %s (%p)", p.Id(), p)
-	log.Debugf("TicketListPage.Create(): currentPage: %s (%p)", currentPage.Id(), currentPage)
+func (p *QueryResultsPage) Create() {
+	log.Debugf("QueryResultsPage.Create(): self:        %s (%p)", p.Id(), p)
+	log.Debugf("QueryResultsPage.Create(): currentPage: %s (%p)", currentPage.Id(), currentPage)
 	ui.Clear()
 	ls := ui.NewList()
 	p.uiList = ls
@@ -96,20 +81,16 @@ func (p *TicketListPage) Create() {
 	if p.commandBar == nil {
 		p.commandBar = commandBar
 	}
-	query := p.ActiveQuery.JQL
-	if sort := p.ActiveSort.JQL; sort != "" {
-		re := regexp.MustCompile(`(?i)\s+ORDER\s+BY.+$`)
-		query = re.ReplaceAllString(query, ``) + " " + sort
-	}
+	//query := p.ActiveQuery.Filter
 	if len(p.cachedResults) == 0 {
-		p.cachedResults = JiraQueryAsStrings(query, p.ActiveQuery.Template)
+		p.cachedResults = make([]string, 0)
 	}
 	if p.selectedLine >= len(p.cachedResults) {
 		p.selectedLine = len(p.cachedResults) - 1
 	}
 	p.displayLines = make([]string, len(p.cachedResults))
 	ls.ItemFgColor = ui.ColorYellow
-	ls.BorderLabel = fmt.Sprintf("%s: %s", p.ActiveQuery.Name, p.ActiveQuery.JQL)
+	ls.BorderLabel = fmt.Sprintf("%s: %s", p.ActiveQuery.Name, p.ActiveQuery.Filter)
 	ls.Height = ui.TermHeight() - 2
 	ls.Width = ui.TermWidth()
 	ls.Y = 0

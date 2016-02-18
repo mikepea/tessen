@@ -1,4 +1,4 @@
-package jiraui
+package tessen
 
 // sort a map's keys in descending order of its values.
 // lifted from http://play.golang.org/p/x4CoUsJ5tK

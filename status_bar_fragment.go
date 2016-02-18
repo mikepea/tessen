@@ -1,4 +1,4 @@
-package jiraui
+package tessen
 
 type StatusBarFragment struct {
 	statusBar *StatusBar

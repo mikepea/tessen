@@ -1,7 +1,6 @@
-jira-ui
 src/
 bin/
 pkg/
-.jira.d
+.tessen.d
 *.swp
 err

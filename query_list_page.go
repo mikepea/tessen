@@ -1,4 +1,4 @@
-package jiraui
+package tessen
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 type Query struct {
 	Name     string
-	JQL      string
+	Filter   string
 	Template string
 }
 
@@ -28,7 +28,7 @@ var baseQueries = []Query{
 }
 
 func getQueries() (queries []Query) {
-	opts := getJiraOpts()
+	opts := getOpts()
 	if q := opts["queries"]; q != nil {
 		qList := q.([]interface{})
 		for _, v := range qList {
@@ -43,7 +43,7 @@ func getQueries() (queries []Query) {
 					}
 				}
 			}
-			queries = append(queries, Query{q2["name"], q2["jql"], q2["template"]})
+			queries = append(queries, Query{q2["name"], q2["filter"], q2["template"]})
 		}
 	}
 	return append(baseQueries, queries...)
@@ -93,9 +93,9 @@ func (p *QueryPage) markActiveLine() {
 		selected := ""
 		if i == p.selectedLine {
 			selected = "fg-white,bg-blue"
-			p.displayLines[i] = fmt.Sprintf("[%-50s | %s](%s)", v.Name, v.JQL, selected)
+			p.displayLines[i] = fmt.Sprintf("[%-50s | %s](%s)", v.Name, v.Filter, selected)
 		} else {
-			p.displayLines[i] = fmt.Sprintf("%-50s [|](fg-blue) [%s](fg-green)", v.Name, v.JQL)
+			p.displayLines[i] = fmt.Sprintf("%-50s [|](fg-blue) [%s](fg-green)", v.Name, v.Filter)
 		}
 	}
 }
@@ -106,7 +106,7 @@ func (p *QueryPage) PreviousPara() {
 		return
 	}
 	for i := p.selectedLine - 1; i > 0; i-- {
-		if p.cachedResults[i].JQL == "" {
+		if p.cachedResults[i].Filter == "" {
 			newDisplayLine = i
 			break
 		}
@@ -120,7 +120,7 @@ func (p *QueryPage) NextPara() {
 		return
 	}
 	for i := p.selectedLine + 1; i < len(p.cachedResults); i++ {
-		if p.cachedResults[i].JQL == "" {
+		if p.cachedResults[i].Filter == "" {
 			newDisplayLine = i
 			break
 		}
@@ -143,13 +143,13 @@ func (p *QueryPage) SelectedQuery() Query {
 }
 
 func (p *QueryPage) SelectItem() {
-	if p.SelectedQuery().JQL == "" {
+	if p.SelectedQuery().Filter == "" {
 		return
 	}
-	q := new(TicketListPage)
+	q := new(QueryResultsPage)
 	q.ActiveQuery = p.SelectedQuery()
-	ticketListPage = q
-	currentPage = ticketListPage
+	queryResultsPage = q
+	currentPage = queryResultsPage
 	changePage()
 }
 

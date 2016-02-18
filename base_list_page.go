@@ -1,4 +1,4 @@
-package jiraui
+package tessen
 
 import (
 	"fmt"
