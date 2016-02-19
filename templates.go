@@ -1,9 +1,16 @@
 package tessen
 
+var all_templates = map[string]string{
+	"debug":      default_debug_template,
+	"list":       default_list_template,
+	"event_view": default_event_view_template,
+	"help":       default_help_template,
+}
+
 const (
-	default_list_template = `{{ range .issues }}[{{ .key | printf "%-12s"}}](fg-red)  [{{ if .fields.assignee }}{{ .fields.assignee.name | printf "%-10s" }}{{else}}{{"Unassigned"| printf "%-10s" }}{{end}} ](fg-blue) [{{ .fields.status.name | printf "%-12s"}}](fg-blue) [{{ dateFormat "2006-01-02" .fields.created }}](fg-blue)/[{{ dateFormat "2006-01-02T15:04" .fields.updated }}](fg-green)  {{ .fields.summary | printf "%-75s"}}
-{{ end }}`
-	default_view_template = `
+	default_debug_template      = "{{ . | toJson}}\n"
+	default_list_template       = `[{{ .key | printf "%-12s"}}](fg-red)  [{{ if .fields.assignee }}{{ .fields.assignee.name | printf "%-10s" }}{{else}}{{"Unassigned"| printf "%-10s" }}{{end}} ](fg-blue) [{{ .fields.status.name | printf "%-12s"}}](fg-blue) [{{ dateFormat "2006-01-02" .fields.created }}](fg-blue)/[{{ dateFormat "2006-01-02T15:04" .fields.updated }}](fg-green)  {{ .fields.summary | printf "%-75s"}}`
+	default_event_view_template = `
 issue: [{{ .key }}](fg-red)
 summary: [{{ .fields.summary }}](fg-blue)
 
@@ -47,33 +54,16 @@ subtasks:
 {{end}}
 `
 	default_help_template = `
-[Quick reference for jira-ui](fg-white)
+[Quick reference for tessen](fg-white)
 
 [Actions:](fg-blue)
 
-    <enter>      - select query/ticket
-    L            - Label view (query results page only)
-    E            - Edit ticket
-    S            - Select sort order (query results page only)
-    v            - Vote for the selected ticket
-    V            - Remove vote on the selected ticket
-    w            - Watch the selected ticket
-    W            - Unwatch the selected ticket
+    <enter>      - select item
     h            - show help page
 
 [Commands (a'la vim/tig):](fg-blue)
 
-    :comment {single-line-comment} - add a short comment to ticket
-    :label {labels}                - add labels to selected ticket
-    :label add/remove {labels}     - add/remove labels to selected ticket
-    :take                          - assign ticket to self
-    :assign {user}                 - assign ticket to {user}
-    :unassign                      - unassign ticket
-    :vote                          - vote for the selected ticket
-    :unvote                        - remove vote for the selected ticket
-    :watch [add/remove] [watcher]  - watch ticket (optionally as a different user)
-    :view {ticket}                 - display {ticket}
-    :query {JQL}                   - display results of JQL
+    :query {JQ boolean expression} - display filtered results
     :help                          - show help page
     :<up>                          - select previous command
     :quit or :q                    - quit
@@ -92,34 +82,11 @@ subtasks:
     q            - go back / quit
     C-c/Q        - quit
 
-[Configuration:](fg-blue)
+[Notes:](fg-blue)
 
-  It is very much recommended to read the go-jira documentation,
-  particularly surrounding the .jira.d configuration directories.
+    Learning JQ is highly recommended, particularly boolean expressions:
 
-  go-jira-ui uses this same mechanism, so can be used to load per-project
-  defaults. It also leverages the templating engine, so you can customise
-  the view of both the query output (use 'jira_ui_list' template), and the
-  issue 'view' template.
-
-  go-jira-ui reads its own [jira-ui-config.yml](fg-green) file in these
-  jira.d directories, as not to pollute the go-jira config. You can add
-  additional queries & sort orderings to the top-level Query page:
-
-    $ cat ~/jira.d/jira-ui-config.yml:
-    sorts:
-      - name: "sort by vote count"
-            jql:  "ORDER BY votes DESC"
-    queries:
-      - name: "alice assigned"
-        jql:  "assignee = alice AND resolution = Unresolved"
-      - name: "bob assigned"
-        jql:  "assignee = bob AND resolution = Unresolved"
-      - name: "unresolved must-do"
-        jql:  "labels = 'must-do' AND resolution = Unresolved AND ( project = 'OPS' OR project = 'INFRA')"
-
-  Learning JQL is highly recommended, the Atlassian Advanced Searching
-  page is a good place to start.
+        https://stedolan.github.io/jq/manual/
 
 `
 )

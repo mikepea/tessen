@@ -1,6 +1,7 @@
 package tessen
 
 import (
+	"bytes"
 	"strings"
 
 	ui "github.com/gizak/termui"
@@ -13,8 +14,12 @@ type HelpPage struct {
 }
 
 func HelpTextAsStrings(data interface{}, templateName string) []interface{} {
+	buf := new(bytes.Buffer)
 	results := make([]interface{}, 0)
-	for _, v := range strings.Split("", "\n") {
+	template := GetTemplate(templateName)
+	log.Debugf("HelpTextAsStrings: template = %q", template)
+	RunTemplate(template, data, buf)
+	for _, v := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
 		results = append(results, v)
 	}
 	return results
@@ -68,7 +73,7 @@ func (p *HelpPage) Create() {
 		p.commandBar = commandBar
 	}
 	if p.cachedResults == nil {
-		p.cachedResults = HelpTextAsStrings(nil, "jira_ui_help")
+		p.cachedResults = HelpTextAsStrings(nil, "help")
 	}
 	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	ls.ItemFgColor = ui.ColorYellow

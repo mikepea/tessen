@@ -1,6 +1,7 @@
 package tessen
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -48,6 +49,19 @@ func WrapText(lines []string, maxWidth uint) []string {
 		out = append(out, indentedWrappedLines...)
 	}
 	return out
+}
+
+func TemplatedEvent(id string, templateName string, eventData interface{}) []string {
+	if templateName == "" {
+		templateName = "event_view"
+	}
+	template := GetTemplate(templateName)
+	buf := new(bytes.Buffer)
+	if template == "" {
+		template = default_list_template
+	}
+	RunTemplate(template, eventData, buf)
+	return strings.Split(strings.TrimSpace(buf.String()), "\n")
 }
 
 func parseYaml(file string, v map[string]interface{}) {
