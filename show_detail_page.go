@@ -1,8 +1,10 @@
 package tessen
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
+	"strings"
 
 	ui "github.com/gizak/termui"
 )
@@ -15,11 +17,31 @@ type ShowDetailPage struct {
 	BaseListPage
 	CommandBarFragment
 	StatusBarFragment
-	MaxWrapWidth uint
-	Template     string
-	apiBody      interface{}
-	WrapWidth    uint
-	opts         map[string]interface{}
+	EventId string
+	event   interface{}
+	opts    map[string]interface{}
+}
+
+func FetchEvent(id string, eventData *[]map[string]interface{}) interface{} {
+	for _, ev := range *eventData {
+		if ev["_id"].(string) == id {
+			return ev
+		}
+	}
+	return nil
+}
+
+func GetEventAsLines(data interface{}) []interface{} {
+	buf := new(bytes.Buffer)
+	results := make([]interface{}, 0)
+	//template := GetTemplate("event_view")
+	template := GetTemplate("debug")
+	log.Debugf("GetEventAsLines: template = %q", template)
+	RunTemplate(template, data, buf)
+	for _, v := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+		results = append(results, v)
+	}
+	return results
 }
 
 func (p *ShowDetailPage) Search() {
@@ -45,19 +67,13 @@ func (p *ShowDetailPage) Search() {
 	}
 }
 
-func (p *ShowDetailPage) SelectItem() {
-	//selected := p.cachedResults[p.selectedLine]
-	return
-	/*
-			q := new(ShowDetailPage)
-			q.TicketId = newTicketId
-			currentPage = q
-		changePage()
-	*/
-}
-
 func (p *ShowDetailPage) Id() string {
-	return "TODO"
+	if p.EventId != "" {
+		return fmt.Sprintf("%s", p.EventId)
+	} else {
+		log.Errorf("No EventId is set on %p", p)
+		return ""
+	}
 }
 
 func (p *ShowDetailPage) PreviousPara() {
@@ -102,8 +118,8 @@ func (p *ShowDetailPage) GoBack() {
 func (p *ShowDetailPage) Refresh() {
 	pDeref := &p
 	q := *pDeref
-	q.cachedResults = make([]string, 0)
-	q.apiBody = nil
+	q.cachedResults = nil
+	q.event = nil
 	currentPage = q
 	changePage()
 	q.Create()
@@ -123,13 +139,6 @@ func (p *ShowDetailPage) Create() {
 	log.Debugf("ShowDetailPage.Create(): self:        %s (%p)", p.Id(), p)
 	log.Debugf("ShowDetailPage.Create(): currentPage: %s (%p)", currentPage.Id(), currentPage)
 	p.opts = getOpts()
-	if p.MaxWrapWidth == 0 {
-		if m := p.opts["max_wrap"]; m != nil {
-			p.MaxWrapWidth = uint(m.(int64))
-		} else {
-			p.MaxWrapWidth = defaultMaxWrapWidth
-		}
-	}
 	ui.Clear()
 	ls := ui.NewList()
 	if p.statusBar == nil {
@@ -139,19 +148,11 @@ func (p *ShowDetailPage) Create() {
 		p.commandBar = commandBar
 	}
 	p.uiList = ls
-	innerWidth := uint(ui.TermWidth()) - 3
-	if innerWidth < p.MaxWrapWidth {
-		p.WrapWidth = innerWidth
-	} else {
-		p.WrapWidth = p.MaxWrapWidth
-	}
-	if p.apiBody == nil {
-		/*
-			p.apiBody, _ = FetchJiraTicket(p.TicketId)
-		*/
+	if p.event == nil {
+		p.event = FetchEvent(p.EventId, &eventData)
 	}
 	if p.cachedResults == nil {
-		p.cachedResults = make([]interface{}, 0)
+		p.cachedResults = GetEventAsLines(p.event)
 	}
 	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	if p.selectedLine >= len(p.cachedResults.([]interface{})) {

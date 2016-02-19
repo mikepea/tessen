@@ -5,51 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 
 	ui "github.com/gizak/termui"
-	"github.com/mitchellh/go-wordwrap"
 	"gopkg.in/coryb/yaml.v2"
 )
-
-func WrapText(lines []string, maxWidth uint) []string {
-	out := make([]string, 0)
-	insideNoformatBlock := false
-	insideCodeBlock := false
-	for _, line := range lines {
-		if matched, _ := regexp.MatchString(`^\s+\{code`, line); matched {
-			insideCodeBlock = !insideCodeBlock
-		} else if strings.TrimSpace(line) == "{noformat}" {
-			insideNoformatBlock = !insideNoformatBlock
-		}
-		if maxWidth == 0 || uint(len(line)) < maxWidth || insideCodeBlock || insideNoformatBlock {
-			out = append(out, line)
-			continue
-		}
-		if matched, _ := regexp.MatchString(`^[a-z_]+:\s`, line); matched {
-			// don't futz with single line field+value.
-			// If they are too long, that's their fault.
-			out = append(out, line)
-			continue
-		}
-		// wrap text, but preserve indenting
-		re := regexp.MustCompile(`^\s*`)
-		indenting := re.FindString(line)
-		wrappedLines := strings.Split(wordwrap.WrapString(line, maxWidth-uint(len(indenting))), "\n")
-		indentedWrappedLines := make([]string, len(wrappedLines))
-		for i, wl := range wrappedLines {
-			if i == 0 {
-				// first line already has the indent
-				indentedWrappedLines[i] = wl
-			} else {
-				indentedWrappedLines[i] = indenting + wl
-			}
-		}
-		out = append(out, indentedWrappedLines...)
-	}
-	return out
-}
 
 func TemplatedEvent(id string, templateName string, eventData interface{}) []string {
 	if templateName == "" {

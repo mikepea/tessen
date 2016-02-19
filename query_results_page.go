@@ -69,6 +69,11 @@ func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{})
 
 }
 
+func (p *QueryResultsPage) GetSelectedQueryResultId() string {
+	qr := p.cachedResults.([]interface{})[p.selectedLine]
+	return qr.(QueryResult).Id
+}
+
 func (p *QueryResultsPage) Search() {
 	s := p.ActiveSearch
 	n := len(p.cachedResults.([]interface{}))
@@ -97,6 +102,7 @@ func (p *QueryResultsPage) SelectItem() {
 		return
 	}
 	q := new(ShowDetailPage)
+	q.EventId = p.GetSelectedQueryResultId()
 	currentPage = q
 	q.Create()
 	changePage()
