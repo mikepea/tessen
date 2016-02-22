@@ -50,7 +50,7 @@ func (p *BaseListPage) SetSearch(searchCommand string) {
 }
 
 func (p *BaseListPage) IsPopulated() bool {
-	if len(p.cachedResults.([]interface{})) > 0 || p.isPopulated {
+	if p.cachedResults != nil && (len(p.cachedResults.([]interface{})) > 0 || p.isPopulated) {
 		return true
 	} else {
 		return false

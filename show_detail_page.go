@@ -34,8 +34,9 @@ func FetchEvent(id string, eventData *[]map[string]interface{}) interface{} {
 func GetEventAsLines(data interface{}) []interface{} {
 	buf := new(bytes.Buffer)
 	results := make([]interface{}, 0)
-	//template := GetTemplate("event_view")
-	template := GetTemplate("debug")
+	template := GetTemplate("event_view")
+	//template := GetTemplate("debug")
+	log.Debugf("GetEventAsLines: data = %q", data)
 	log.Debugf("GetEventAsLines: template = %q", template)
 	RunTemplate(template, data, buf)
 	for _, v := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
