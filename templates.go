@@ -12,28 +12,35 @@ const (
 	default_debug_template      = "{{ . | toJson}}\n"
 	default_list_template       = `[{{ .key | printf "%-12s"}}](fg-red)  [{{ if .fields.assignee }}{{ .fields.assignee.name | printf "%-10s" }}{{else}}{{"Unassigned"| printf "%-10s" }}{{end}} ](fg-blue) [{{ .fields.status.name | printf "%-12s"}}](fg-blue) [{{ dateFormat "2006-01-02" .fields.created }}](fg-blue)/[{{ dateFormat "2006-01-02T15:04" .fields.updated }}](fg-green)  {{ .fields.summary | printf "%-75s"}}`
 	default_event_view_template = `
+Event:
+  _id:          [{{ ._id }}](fg-blue)
+  acknowledged: [{{ .acknowledged }}](fg-blue)
 Client:
   name:         [{{ .client.name }}](fg-blue)
   instance_id:  [{{ .client.instance_id }}](fg-blue)
+{{ if .client.tags }}
   fqdn:         [{{ .client.tags.FQDN }}](fg-blue)
   ecosystem:    [{{ .client.tags.Ecosystem }}](fg-blue)
   region:       [{{ .client.tags.Region }}](fg-blue)
   display_name: [{{ index . "client" "tags" "Display Name" }}](fg-blue)
+{{ end }}
 
 Check:
-   name:        [{{ .check.name }}](fg-blue)
-   issued:      [{{ .check.issued }}](fg-blue)
-   team:        [{{ .check.team }}](fg-blue)
-   status:      {{ .check.status }}
+  name:        [{{ .check.name }}](fg-green)
+  command:     [{{ .check.command }}](fg-green)
+  issued:      [{{ .check.issued }}](fg-blue)
+  team:        [{{ .check.team }}](fg-blue)
+  project:     [{{ .check.project }}](fg-blue)
+  status:      {{ .check.status }}
 
-   runbook:     [{{ .check.runbook }}](fg-blue)
+  runbook:     [{{ .check.runbook }}](fg-blue)
 
-   page:        [{{ .check.page }}](fg-blue)
-   ticket:      [{{ .check.ticket }}](fg-blue)
+  page:        [{{ .check.page }}](fg-blue)
+  ticket:      [{{ .check.ticket }}](fg-blue)
 
 Output:
 
-   {{ indent 4 .check.output }}
+  {{ indent 2 .check.output }}
 
 `
 	default_help_template = `
