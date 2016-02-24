@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -59,6 +60,23 @@ func dateFormat(format string, content string) (string, error) {
 	} else {
 		return t.Format(format), nil
 	}
+}
+
+func colorizedSensuStatus(statusCode int) (string, error) {
+	status := ""
+	switch statusCode {
+	case 0:
+		status = "[OK  ](fg-green)"
+	case 1:
+		status = "[WARN](fg-yellow)"
+	case 2:
+		status = "[CRIT](fg-red)"
+	case 3:
+		status = "[UNKN](fg-blue)"
+	default:
+		return "", errors.New(fmt.Sprintf("Invalid statusCode %q", statusCode))
+	}
+	return status, nil
 }
 
 func RunTemplate(templateContent string, data interface{}, out io.Writer) error {
@@ -134,6 +152,17 @@ func RunTemplate(templateContent string, data interface{}, out io.Writer) error 
 		},
 		"dateFormat": func(format string, content string) (string, error) {
 			return dateFormat(format, content)
+		},
+		"colorizedSensuStatus": func(statusCode interface{}) (string, error) {
+			switch statusCode := statusCode.(type) {
+			case float64:
+				return colorizedSensuStatus(int(statusCode))
+			case string:
+				if i, err := strconv.Atoi(statusCode); err == nil {
+					return colorizedSensuStatus(i)
+				}
+			}
+			return "", errors.New("colorizedSensuStatus: bad type")
 		},
 	}
 	if tmpl, err := template.New("template").Funcs(funcs).Parse(templateContent); err != nil {

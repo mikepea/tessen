@@ -15,6 +15,7 @@ const (
 Event:
   _id:          [{{ ._id }}](fg-blue)
   acknowledged: [{{ .acknowledged }}](fg-blue)
+
 Client:
   name:         [{{ .client.name }}](fg-blue)
   instance_id:  [{{ .client.instance_id }}](fg-blue)
@@ -31,12 +32,15 @@ Check:
   issued:      [{{ .check.issued }}](fg-blue)
   team:        [{{ .check.team }}](fg-blue)
   project:     [{{ .check.project }}](fg-blue)
-  status:      {{ .check.status }}
+  status:      {{ colorizedSensuStatus .check.status }}
 
   runbook:     [{{ .check.runbook }}](fg-blue)
 
   page:        [{{ .check.page }}](fg-blue)
   ticket:      [{{ .check.ticket }}](fg-blue)
+{{ if .check.history }}
+  history:    {{range .check.history}} {{ colorizedSensuStatus . }}{{end}}
+{{ end }}
 
 Output:
 
