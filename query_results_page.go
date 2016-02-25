@@ -126,7 +126,7 @@ func (p *QueryResultsPage) Update() {
 func (p *QueryResultsPage) Refresh() {
 	pDeref := &p
 	q := *pDeref
-	q.cachedResults = make([]interface{}, 0)
+	q.cachedResults = nil
 	queryResultsPage = q
 	changePage()
 	q.Create()

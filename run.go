@@ -3,6 +3,7 @@ package tessen
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/coryb/optigo"
 	ui "github.com/gizak/termui"
@@ -10,6 +11,7 @@ import (
 )
 
 var exitNow = false
+var defaultRefreshInterval = 30
 
 type EditPager interface {
 	DeleteRuneBackward()
@@ -190,8 +192,14 @@ General Options:
 	}
 
 	opts := getOpts()
+	var endpoint string
 	if e, ok := opts["endpoint"]; e.(string) != "" && ok {
-		eventData, err = FetchUchiwaEvents(e.(string))
+		endpoint = e.(string)
+		eventData, err = FetchUchiwaEvents(endpoint)
+		if err != nil {
+			fmt.Printf("Error fetching Uchiwa events: %q\n", err)
+			os.Exit(1)
+		}
 	} else {
 		fmt.Printf("Must set endpoint via options or in .tessen.d/config.yml\n")
 		os.Exit(1)
@@ -222,6 +230,20 @@ General Options:
 		log.Error("Unknown command %s", command)
 		os.Exit(1)
 	}
+
+	go func() {
+		for {
+			timer := time.NewTimer(time.Duration(defaultRefreshInterval) * time.Second)
+			<-timer.C
+			eventData, err = FetchUchiwaEvents(endpoint)
+			if err != nil {
+				log.Errorf("Error fetching Uchiwa events: %q\n", err)
+			}
+			if obj, ok := currentPage.(Refresher); ok {
+				obj.Refresh()
+			}
+		}
+	}()
 
 	for exitNow != true {
 
