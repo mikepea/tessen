@@ -55,6 +55,10 @@ func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{})
 			}
 		}
 	}
+
+	if len(results) == 0 {
+		results = append(results, QueryResult{"", "No results found", nil})
+	}
 	return results
 
 }
@@ -91,8 +95,12 @@ func (p *QueryResultsPage) SelectItem() {
 	if len(p.cachedResults.([]interface{})) == 0 {
 		return
 	}
+	id := p.GetSelectedQueryResultId()
+	if id == "" {
+		return
+	}
 	q := new(ShowDetailPage)
-	q.EventId = p.GetSelectedQueryResultId()
+	q.EventId = id
 	currentPage = q
 	q.Create()
 	changePage()
