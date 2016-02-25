@@ -1,16 +1,16 @@
 package tessen
 
 var all_templates = map[string]string{
-	"debug":      default_debug_template,
-	"list":       default_list_template,
-	"event_view": default_event_view_template,
-	"help":       default_help_template,
+	"debug":           default_debug_template,
+	"event_list":      default_event_list_template,
+	"event_view":      default_event_view_template,
+	"help":            default_help_template,
 }
 
 //   issued:      [{{ dateFormat "2006-01-02T15:04" .check.issued }}](fg-blue)
 const (
 	default_debug_template      = "{{ . | toJson}}\n"
-	default_list_template       = `[{{ .key | printf "%-12s"}}](fg-red)  [{{ if .fields.assignee }}{{ .fields.assignee.name | printf "%-10s" }}{{else}}{{"Unassigned"| printf "%-10s" }}{{end}} ](fg-blue) [{{ .fields.status.name | printf "%-12s"}}](fg-blue) [{{ dateFormat "2006-01-02" .fields.created }}](fg-blue)/[{{ dateFormat "2006-01-02T15:04" .fields.updated }}](fg-green)  {{ .fields.summary | printf "%-75s"}}`
+	default_event_list_template = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
 	default_event_view_template = `
 Event:
   _id:          [{{ ._id }}](fg-blue)

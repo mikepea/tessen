@@ -25,6 +25,7 @@ type QueryResultsPage struct {
 }
 
 func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{}) []interface{} {
+	template := GetTemplate("event_list")
 	results := make([]interface{}, 0)
 	b, err := json.Marshal(*eventData)
 	if err != nil {
@@ -46,21 +47,10 @@ func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{})
 		id := strings.Trim(v, "\"")
 		for _, ev := range *eventData {
 			if ev["_id"].(string) == id {
-				check := ev["check"].(map[string]interface{})
-				client := ev["client"].(map[string]interface{})
-				var status string
-				switch int(check["status"].(float64)) {
-				case 0:
-					status = "[OK](fg-green)  "
-				case 1:
-					status = "[WARN](fg-yellow)"
-				case 2:
-					status = "[CRIT](fg-red)"
-				default:
-					status = "[UNKN](fg-blue)"
-				}
-				summary := fmt.Sprintf("%s  [%-40s](fg-green)  %s", status, check["name"].(string), client["name"].(string))
-				results = append(results, QueryResult{id, summary, ev})
+				id := strings.Trim(v, "\"")
+				buf := new(bytes.Buffer)
+				RunTemplate(template, ev, buf)
+				results = append(results, QueryResult{id, buf.String(), ev})
 				continue
 			}
 		}

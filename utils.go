@@ -18,7 +18,7 @@ func TemplatedEvent(id string, templateName string, eventData interface{}) []str
 	template := GetTemplate(templateName)
 	buf := new(bytes.Buffer)
 	if template == "" {
-		template = default_list_template
+		template = default_event_view_template
 	}
 	RunTemplate(template, eventData, buf)
 	return strings.Split(strings.TrimSpace(buf.String()), "\n")
