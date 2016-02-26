@@ -163,7 +163,7 @@ func (p *ShowDetailPage) Create() {
 	ls.Height = ui.TermHeight() - 2
 	ls.Width = ui.TermWidth()
 	ls.Border = true
-	ls.BorderLabel = fmt.Sprintf("%s", p.Id)
+	ls.BorderLabel = fmt.Sprintf("%s", p.Id())
 	ls.Y = 0
 	p.statusBar.Create()
 	p.commandBar.Create()
