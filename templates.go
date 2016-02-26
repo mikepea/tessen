@@ -15,13 +15,14 @@ const (
 Event:
   _id:          [{{ ._id }}](fg-blue)
   acknowledged: [{{ .acknowledged }}](fg-blue)
+  occurrences:  [{{ .occurrences }}](fg-blue)
 
 Client:
-  name:         [{{ .client.name }}](fg-blue)
+  name:         [{{ .client.name }}](fg-green)
   instance_id:  [{{ .client.instance_id }}](fg-blue)
 {{ if .client.tags }}
   fqdn:         [{{ .client.tags.FQDN }}](fg-blue)
-  ecosystem:    [{{ .client.tags.Ecosystem }}](fg-blue)
+  ecosystem:    [{{ .client.tags.Ecosystem }}](fg-green)
   region:       [{{ .client.tags.Region }}](fg-blue)
   display_name: [{{ index . "client" "tags" "Display Name" }}](fg-blue)
 {{ end }}
@@ -29,6 +30,7 @@ Client:
 Check:
   name:        [{{ .check.name }}](fg-green)
   command:     [{{ .check.command }}](fg-green)
+  interval:    [{{ .check.interval }}](fg-blue)
   issued:      [{{ .check.issued }}](fg-blue)
   team:        [{{ .check.team }}](fg-blue)
   project:     [{{ .check.project }}](fg-blue)
