@@ -3,6 +3,7 @@ package tessen
 var all_templates = map[string]string{
 	"debug":           default_debug_template,
 	"event_list":      default_event_list_template,
+	"team_event_list": team_event_list_template,
 	"event_view":      default_event_view_template,
 	"help":            default_help_template,
 }
@@ -11,6 +12,7 @@ var all_templates = map[string]string{
 const (
 	default_debug_template      = "{{ . | toJson}}\n"
 	default_event_list_template = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
+	team_event_list_template    = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.team | printf "%-20s" }}](fg-blue)  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
 	default_event_view_template = `
 Event:
   _id:          [{{ ._id }}](fg-blue)

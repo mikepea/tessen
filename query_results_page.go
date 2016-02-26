@@ -24,8 +24,15 @@ type QueryResultsPage struct {
 	ActiveQuery Query
 }
 
-func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{}) []interface{} {
-	template := GetTemplate("event_list")
+func GetFilteredListOfEvents(query Query, eventData *[]map[string]interface{}) []interface{} {
+	templateName := "event_list"
+	if query.Template != "" {
+		templateName = query.Template
+	}
+	template := GetTemplate(templateName)
+	if template == "" {
+		template = GetTemplate("event_list")
+	}
 	results := make([]interface{}, 0)
 	b, err := json.Marshal(*eventData)
 	if err != nil {
@@ -33,7 +40,7 @@ func GetFilteredListOfEvents(filter string, eventData *[]map[string]interface{})
 		return results
 	}
 
-	cmd := exec.Command("jq", fmt.Sprintf(".[] | select( %s ) | ._id", filter))
+	cmd := exec.Command("jq", fmt.Sprintf(".[] | select( %s ) | ._id", query.Filter))
 	cmd.Stdin = bytes.NewReader(b)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -161,9 +168,8 @@ func (p *QueryResultsPage) Create() {
 	if p.commandBar == nil {
 		p.commandBar = commandBar
 	}
-	query := p.ActiveQuery.Filter
 	if p.cachedResults == nil {
-		p.cachedResults = GetFilteredListOfEvents(query, &eventData)
+		p.cachedResults = GetFilteredListOfEvents(p.ActiveQuery, &eventData)
 	}
 	if p.selectedLine >= len(p.cachedResults.([]interface{})) {
 		p.selectedLine = len(p.cachedResults.([]interface{})) - 1
