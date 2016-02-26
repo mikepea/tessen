@@ -74,7 +74,7 @@ func colorizedSensuStatus(statusCode int) (string, error) {
 	case 3:
 		status = "[UNKN](fg-blue)"
 	default:
-		return "", errors.New(fmt.Sprintf("Invalid statusCode %q", statusCode))
+		status = fmt.Sprintf("%d", statusCode)
 	}
 	return status, nil
 }
@@ -156,8 +156,10 @@ func RunTemplate(templateContent string, data interface{}, out io.Writer) error 
 		"colorizedSensuStatus": func(statusCode interface{}) (string, error) {
 			switch statusCode := statusCode.(type) {
 			case float64:
+				log.Debugf("got float64 statusCode: %q", statusCode)
 				return colorizedSensuStatus(int(statusCode))
 			case string:
+				log.Debugf("got string statusCode: %q", statusCode)
 				if i, err := strconv.Atoi(statusCode); err == nil {
 					return colorizedSensuStatus(i)
 				}
