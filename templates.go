@@ -6,6 +6,7 @@ var all_templates = map[string]string{
 	"team_event_list": team_event_list_template,
 	"event_view":      default_event_view_template,
 	"help":            default_help_template,
+	"event_http_dashboard_home": default_event_http_dashboard_home_template,
 }
 
 //   issued:      [{{ dateFormat "2006-01-02T15:04" .check.issued }}](fg-blue)
@@ -86,5 +87,105 @@ Output:
 
         https://stedolan.github.io/jq/manual/
 
+`
+	default_event_http_dashboard_home_template = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="refresh" content="10">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		<title>Tessen Dashboard</title>
+
+    <!-- Bootstrap -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+
+  <style>
+  body {
+    background-color: #002b36;
+    color: rgba(255, 255, 255, 1);
+  }
+  .query-overview {
+    font-size: xx-large;
+    text-align: center;
+  }
+  .query-overview .critical {
+    border-radius: 25px;
+    background-color: #dc322f;
+    color: rgba(255, 255, 255, 1);
+  }
+  .query-overview .warning {
+    border-radius: 25px;
+    background-color: #b58900;
+    color: rgba(255, 255, 255, 1);
+  }
+  .query-overview .unknown {
+    border-radius: 25px;
+    background-color: #268bd2;
+    color: rgba(255, 255, 255, 1);
+  }
+  .query-overview .ok {
+    border-radius: 25px;
+    background-color: #859900;
+    color: rgba(255, 255, 255, 1);
+  }
+  .query-overview .count .critical {
+    border-radius: 0px;
+    display: inline-block;
+    font-size: xx-large;
+    padding: 3px;
+  }
+  .query-overview .count .warning {
+    border-radius: 0px;
+    display: inline-block;
+    font-size: xx-large;
+    padding: 3px;
+  }
+  .query-overview .count .unknown {
+    border-radius: 0px;
+    display: inline-block;
+    padding: 3px;
+  }
+  </style>
+
+  </head>
+  <body>
+
+		<div class="container">
+      <h1>My Dashboard</h1>
+    </div>
+
+		<div class="container">
+      <div class="row">
+	    {{range .}}
+			  <div class="col-md-4">
+					<div class="query-overview">
+            {{if gt .CritCount 0 }}
+						<div class="critical">
+            {{else if gt .WarnCount 0 }}
+						<div class="warning">
+            {{else if gt .UnknCount 0 }}
+						<div class="unknown">
+            {{else}}
+						<div class="ok">
+            {{end}}
+							<h2>{{ .Name }}</h2>
+              <div class="count">
+              <div class="critical">{{ .CritCount }}</div>
+              <div class="warning">{{ .WarnCount }}</div>
+              <div class="unknown">{{ .UnknCount }}</div>
+            </div>
+						</div>
+					</div>
+			  </div>
+	      {{end}}
+      </div>
+		</div>
+
+  </body>
+</html>
 `
 )

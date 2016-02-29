@@ -165,6 +165,7 @@ General Options:
 		},
 		"u|user=s":        setopt,
 		"endpoint=s":      setopt,
+		"l|listen=s":      setopt,
 		"q|query=s":       setopt,
 		"f|queryfields=s": setopt,
 		"t|template=s":    setopt,
@@ -205,30 +206,32 @@ General Options:
 		os.Exit(1)
 	}
 
-	err = ui.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer ui.Close()
+	if _, ok := opts["listen"]; !ok {
+		err = ui.Init()
+		if err != nil {
+			panic(err)
+		}
+		defer ui.Close()
 
-	registerKeyboardHandlers()
+		registerKeyboardHandlers()
 
-	queryPage = new(QueryPage)
-	helpPage = new(HelpPage)
-	commandBar = new(CommandBar)
+		queryPage = new(QueryPage)
+		helpPage = new(HelpPage)
+		commandBar = new(CommandBar)
 
-	switch command {
-	case "list":
-		queryResultsPage = new(QueryResultsPage)
-		if query := cliOpts["query"]; query == nil {
-			log.Error("Must supply a --query option to %q", command)
+		switch command {
+		case "list":
+			queryResultsPage = new(QueryResultsPage)
+			if query := cliOpts["query"]; query == nil {
+				log.Error("Must supply a --query option to %q", command)
+				os.Exit(1)
+			}
+		case "toplevel":
+			currentPage = queryPage
+		default:
+			log.Error("Unknown command %s", command)
 			os.Exit(1)
 		}
-	case "toplevel":
-		currentPage = queryPage
-	default:
-		log.Error("Unknown command %s", command)
-		os.Exit(1)
 	}
 
 	go func() {
@@ -245,6 +248,13 @@ General Options:
 		}
 	}()
 
+	if l, ok := opts["listen"]; ok {
+		log.Debugf("Starting http dashboard on %s", l.(string))
+		go func() {
+			log.Fatal(StartHttpDashboard(l.(string)))
+		}()
+	}
+
 	for exitNow != true {
 
 		if err != nil {
@@ -252,9 +262,14 @@ General Options:
 			os.Exit(1)
 		}
 
-		currentPage.Create()
-		ui.Loop()
+		if _, ok := opts["listen"]; !ok {
+			currentPage.Create()
+			ui.Loop()
+		}
+		log.Debug("End of exitNow loop")
 
 	}
+
+	log.Debug("Normal exit, woohoo!")
 
 }
