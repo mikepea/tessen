@@ -166,6 +166,7 @@ General Options:
 		"u|user=s":        setopt,
 		"endpoint=s":      setopt,
 		"l|listen=s":      setopt,
+		"noui":            setopt,
 		"q|query=s":       setopt,
 		"f|queryfields=s": setopt,
 		"t|template=s":    setopt,
@@ -206,7 +207,7 @@ General Options:
 		os.Exit(1)
 	}
 
-	if _, ok := opts["listen"]; !ok {
+	if _, ok := opts["noui"]; !ok {
 		err = ui.Init()
 		if err != nil {
 			panic(err)
@@ -262,7 +263,7 @@ General Options:
 			os.Exit(1)
 		}
 
-		if _, ok := opts["listen"]; !ok {
+		if _, ok := opts["noui"]; !ok {
 			currentPage.Create()
 			ui.Loop()
 		}
