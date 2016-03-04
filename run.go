@@ -139,6 +139,9 @@ func collectSource(s *Source, seconds int) {
 	if s.Provider == "uchiwa" {
 		log.Debugf("Collecting uchiwa data")
 		s.CachedData, err = FetchUchiwaEvents(s.Endpoint)
+	} else if s.Provider == "pagerduty" {
+		log.Debugf("Collecting pagerduty data")
+		s.CachedData, err = FetchPagerDutyEvents(s.Endpoint)
 	} else {
 		log.Errorf("Cannot collect from source %q, unimplemented backend type %q", s.Name, s.Provider)
 	}

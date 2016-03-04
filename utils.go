@@ -13,12 +13,12 @@ import (
 
 func TemplatedEvent(id string, templateName string, eventData interface{}) []string {
 	if templateName == "" {
-		templateName = "event_view"
+		templateName = "debug"
 	}
 	template := GetTemplate(templateName)
 	buf := new(bytes.Buffer)
 	if template == "" {
-		template = default_event_view_template
+		template = default_debug_template
 	}
 	RunTemplate(template, eventData, buf)
 	return strings.Split(strings.TrimSpace(buf.String()), "\n")

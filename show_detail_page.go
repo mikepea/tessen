@@ -26,6 +26,8 @@ type ShowDetailPage struct {
 func FetchEvent(id string, source Source) interface{} {
 	if source.Provider == "uchiwa" {
 		return FetchUchiwaEvent(id, source)
+	} else if source.Provider == "pagerduty" {
+		return FetchPagerDutyEvent(id, source)
 	} else {
 		return nil
 	}
@@ -34,8 +36,8 @@ func FetchEvent(id string, source Source) interface{} {
 func GetEventAsLines(data interface{}) []interface{} {
 	buf := new(bytes.Buffer)
 	results := make([]interface{}, 0)
-	template := GetTemplate("event_view")
-	//template := GetTemplate("debug")
+	//template := GetTemplate("event_view")
+	template := GetTemplate("debug")
 	log.Debugf("GetEventAsLines: data = %q", data)
 	log.Debugf("GetEventAsLines: template = %q", template)
 	RunTemplate(template, data, buf)

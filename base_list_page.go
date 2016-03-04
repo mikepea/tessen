@@ -129,6 +129,9 @@ func (p *BaseListPage) SetSelectedLine(line int) {
 }
 
 func (p *BaseListPage) markActiveLine() {
+	if p.cachedResults == nil {
+		return
+	}
 	for i, v := range p.cachedResults.([]interface{}) {
 		selected := ""
 		s := v.(string)

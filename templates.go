@@ -1,20 +1,23 @@
 package tessen
 
 var all_templates = map[string]string{
-	"debug":           default_debug_template,
-	"event_list":      default_event_list_template,
-	"team_event_list": team_event_list_template,
-	"event_view":      default_event_view_template,
-	"help":            default_help_template,
+	"debug":                   default_debug_template,
+	"uchiwa_event_list":       uchiwa_event_list_template,
+	"uchiwa_team_event_list":  uchiwa_team_event_list_template,
+	"uchiwa_event_view":       uchiwa_event_view_template,
+	"pagerduty_incident_list": pagerduty_incident_list_template,
+	"pagerduty_incident_view": default_debug_template,
+	"help": default_help_template,
 	"event_http_dashboard_home": default_event_http_dashboard_home_template,
 }
 
 //   issued:      [{{ dateFormat "2006-01-02T15:04" .check.issued }}](fg-blue)
 const (
-	default_debug_template      = "{{ . | toJson}}\n"
-	default_event_list_template = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
-	team_event_list_template    = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.team | printf "%-20s" }}](fg-blue)  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
-	default_event_view_template = `
+	default_debug_template           = "{{ . | toJson}}\n"
+	uchiwa_event_list_template       = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
+	uchiwa_team_event_list_template  = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.team | printf "%-20s" }}](fg-blue)  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
+	pagerduty_incident_list_template = `{{ .id }}  [{{ .escalation_policy.name | printf "%-40s" }}](fg-green)  [{{ .assigned_to_user.email | printf "%-40s" }}](fg-green)  {{ .trigger_summary_data.description }}`
+	uchiwa_event_view_template       = `
 Event:
   _id:          [{{ ._id }}](fg-blue)
   acknowledged: [{{ .acknowledged }}](fg-blue)
