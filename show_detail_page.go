@@ -18,17 +18,17 @@ type ShowDetailPage struct {
 	CommandBarFragment
 	StatusBarFragment
 	EventId string
+	Source  Source
 	event   interface{}
 	opts    map[string]interface{}
 }
 
-func FetchEvent(id string, eventData *[]map[string]interface{}) interface{} {
-	for _, ev := range *eventData {
-		if ev["_id"].(string) == id {
-			return ev
-		}
+func FetchEvent(id string, source Source) interface{} {
+	if source.Provider == "uchiwa" {
+		return FetchUchiwaEvent(id, source)
+	} else {
+		return nil
 	}
-	return nil
 }
 
 func GetEventAsLines(data interface{}) []interface{} {
@@ -150,7 +150,7 @@ func (p *ShowDetailPage) Create() {
 	}
 	p.uiList = ls
 	if p.event == nil {
-		p.event = FetchEvent(p.EventId, &eventData)
+		p.event = FetchEvent(p.EventId, p.Source)
 	}
 	if p.cachedResults == nil {
 		p.cachedResults = GetEventAsLines(p.event)

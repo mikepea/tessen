@@ -30,15 +30,15 @@ func getDashboardQueries() (queries []Query) {
 				}
 			}
 			if q2["dashboard"] == "true" {
-				queries = append(queries, Query{q2["name"], q2["filter"], q2["template"]})
+				queries = append(queries, Query{q2["name"], q2["filter"], q2["template"], FindSourceByName(q2["source"])})
 			}
 		}
 	}
 	return queries
 }
 
-func countEvents(status float64, data []interface{}) (count int) {
-	for _, ev := range data {
+func countEvents(status float64, qr []interface{}) (count int) {
+	for _, ev := range qr {
 		data := ev.(QueryResult).Data
 		if data == nil {
 			continue
@@ -56,7 +56,7 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	template := GetTemplate("event_http_dashboard_home")
 	displayWidgets := make([]DisplayWidget, 0)
 	for _, q := range queries {
-		r := GetFilteredListOfEvents(q, &eventData)
+		r := GetQueryResults(q)
 		numCrit := countEvents(2, r)
 		numWarn := countEvents(1, r)
 		numUnkn := countEvents(3, r)

@@ -8,7 +8,18 @@ import (
 	"strings"
 )
 
-func FetchUchiwaEvents(endpoint string) ([]map[string]interface{}, error) {
+func FetchUchiwaEvent(id string, source Source) interface{} {
+	eventData := source.CachedData.([]interface{})
+	for _, ev := range eventData {
+		event := ev.(map[string]interface{})
+		if event["_id"].(string) == id {
+			return event
+		}
+	}
+	return nil
+}
+
+func FetchUchiwaEvents(endpoint string) ([]interface{}, error) {
 	var contents []byte
 	var err error
 	log.Debugf("FetchUchiwaEvents: %s", endpoint[7:])
@@ -22,7 +33,7 @@ func FetchUchiwaEvents(endpoint string) ([]map[string]interface{}, error) {
 		return nil, err
 	}
 
-	data := make([]map[string]interface{}, 0)
+	data := make([]interface{}, 0)
 	dec := json.NewDecoder(strings.NewReader(string(contents)))
 	dec.Decode(&data)
 	return data, nil

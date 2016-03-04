@@ -24,7 +24,24 @@ type QueryResultsPage struct {
 	ActiveQuery Query
 }
 
-func GetFilteredListOfEvents(query Query, eventData *[]map[string]interface{}) []interface{} {
+func GetQueryResults(query Query) []interface{} {
+	s := FindSourceByName(query.Source.Name)
+	if s == nil {
+		return nil
+	}
+	if s.Provider == "uchiwa" {
+		return GetFilteredListOfUchiwaEvents(query, &s.CachedData)
+	} else {
+		log.Errorf("Unsupported provider %q", s.Provider)
+		return nil
+	}
+}
+
+func GetFilteredListOfUchiwaEvents(query Query, data *interface{}) []interface{} {
+	results := make([]interface{}, 0)
+	if data == nil {
+		return results
+	}
 	templateName := "event_list"
 	if query.Template != "" {
 		templateName = query.Template
@@ -33,8 +50,7 @@ func GetFilteredListOfEvents(query Query, eventData *[]map[string]interface{}) [
 	if template == "" {
 		template = GetTemplate("event_list")
 	}
-	results := make([]interface{}, 0)
-	b, err := json.Marshal(*eventData)
+	b, err := json.Marshal(*data)
 	if err != nil {
 		log.Errorf("%s", err)
 		return results
@@ -52,12 +68,13 @@ func GetFilteredListOfEvents(query Query, eventData *[]map[string]interface{}) [
 
 	for _, v := range strings.Split(out.String(), "\n") {
 		id := strings.Trim(v, "\"")
-		for _, ev := range *eventData {
-			if ev["_id"].(string) == id {
+		for _, e := range (*data).([]interface{}) {
+			event := e.(map[string]interface{})
+			if event["_id"].(string) == id {
 				id := strings.Trim(v, "\"")
 				buf := new(bytes.Buffer)
-				RunTemplate(template, ev, buf)
-				results = append(results, QueryResult{id, buf.String(), ev})
+				RunTemplate(template, event, buf)
+				results = append(results, QueryResult{id, buf.String(), event})
 				continue
 			}
 		}
@@ -108,6 +125,7 @@ func (p *QueryResultsPage) SelectItem() {
 	}
 	q := new(ShowDetailPage)
 	q.EventId = id
+	q.Source = *p.ActiveQuery.Source
 	currentPage = q
 	q.Create()
 	changePage()
@@ -169,7 +187,7 @@ func (p *QueryResultsPage) Create() {
 		p.commandBar = commandBar
 	}
 	if p.cachedResults == nil {
-		p.cachedResults = GetFilteredListOfEvents(p.ActiveQuery, &eventData)
+		p.cachedResults = GetQueryResults(p.ActiveQuery)
 	}
 	if p.selectedLine >= len(p.cachedResults.([]interface{})) {
 		p.selectedLine = len(p.cachedResults.([]interface{})) - 1

@@ -10,6 +10,7 @@ type Query struct {
 	Name     string
 	Filter   string
 	Template string
+	Source   *Source
 }
 
 type QueryPage struct {
@@ -19,12 +20,7 @@ type QueryPage struct {
 	cachedResults []Query
 }
 
-var baseQueries = []Query{
-	Query{"All Events", "true", ""},
-	Query{"Paging Events", ".check.page == true", ""},
-	Query{"High Occurrence", ".occurrences > 100", ""},
-	Query{"---", "", ""}, // no-op line in UI
-}
+var baseQueries []Query
 
 func getQueries() (queries []Query) {
 	opts := getOpts()
@@ -42,7 +38,11 @@ func getQueries() (queries []Query) {
 					}
 				}
 			}
-			queries = append(queries, Query{q2["name"], q2["filter"], q2["template"]})
+			if q2["source"] == "" {
+				continue
+			}
+			log.Debugf("getQueries: Loading up %q (%s)", q2["name"], q2["source"])
+			queries = append(queries, Query{q2["name"], q2["filter"], q2["template"], FindSourceByName(q2["source"])})
 		}
 	}
 	return append(baseQueries, queries...)
@@ -92,9 +92,9 @@ func (p *QueryPage) markActiveLine() {
 		selected := ""
 		if i == p.selectedLine {
 			selected = "fg-white,bg-blue"
-			p.displayLines[i] = fmt.Sprintf("[%-50s | %s](%s)", v.Name, v.Filter, selected)
+			p.displayLines[i] = fmt.Sprintf("[%-25s | %-50s | %s](%s)", v.Source.Name, v.Name, v.Filter, selected)
 		} else {
-			p.displayLines[i] = fmt.Sprintf("%-50s [|](fg-blue) [%s](fg-green)", v.Name, v.Filter)
+			p.displayLines[i] = fmt.Sprintf("[%-25s](fg-blue) [|](fg-blue) %-50s [|](fg-blue) [%s](fg-green)", v.Source.Name, v.Name, v.Filter)
 		}
 	}
 }

@@ -85,7 +85,6 @@ func getOpts() map[string]interface{} {
 
 	opts := make(map[string]interface{})
 	defaults := map[string]interface{}{
-		"endpoint":  os.Getenv("UCHIWA_ENDPOINT"),
 		"directory": fmt.Sprintf("%s/.tessen.d/templates", home),
 		"quiet":     true,
 	}
