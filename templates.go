@@ -16,7 +16,7 @@ const (
 	default_debug_template           = "{{ . | toJson}}\n"
 	uchiwa_event_list_template       = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
 	uchiwa_team_event_list_template  = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.team | printf "%-20s" }}](fg-blue)  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
-	pagerduty_incident_list_template = `{{ .id }}  [{{ .escalation_policy.name | printf "%-40s" }}](fg-green)  [{{ .assigned_to_user.email | printf "%-40s" }}](fg-green)  {{ .trigger_summary_data.description }}`
+	pagerduty_incident_list_template = `{{ .id }}  {{.status | printf "%-12s"}}  [{{ .escalation_policy.name | printf "%-40s" }}](fg-green)  [{{if .assigned_to_user}}{{ .assigned_to_user.email | printf "%-20s" }}{{else}}{{ "UNASSIGNED" | printf "%-40s" }}{{end}}](fg-green)  {{ .trigger_summary_data.description }}`
 	uchiwa_event_view_template       = `
 Event:
   _id:          [{{ ._id }}](fg-blue)

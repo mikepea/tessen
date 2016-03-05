@@ -73,7 +73,7 @@ func (p *QueryResultsPage) SelectItem() {
 	}
 	q := new(ShowDetailPage)
 	q.EventId = id
-	q.Source = *p.ActiveQuery.Source
+	q.Source = p.ActiveQuery.Source
 	currentPage = q
 	q.Create()
 	changePage()

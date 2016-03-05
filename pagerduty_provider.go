@@ -60,7 +60,7 @@ func GetFilteredListOfPagerDutyEvents(query Query, data *interface{}) []interfac
 	return results
 }
 
-func FetchPagerDutyEvent(id string, source Source) interface{} {
+func FetchPagerDutyEvent(id string, source *Source) interface{} {
 	eventData := source.CachedData.([]interface{})
 	log.Debugf("FetchPagerDutyEvent: eventData: %q", eventData)
 	for _, ev := range eventData {
@@ -73,13 +73,13 @@ func FetchPagerDutyEvent(id string, source Source) interface{} {
 	return nil
 }
 
-func FetchPagerDutyEvents(endpoint string) ([]interface{}, error) {
+func FetchPagerDutyEvents(s *Source) ([]interface{}, error) {
 	var contents []byte
 	var err error
-	if endpoint[:7] == "file://" {
-		contents, err = getPagerDutyResultsFromFile(endpoint[7:])
+	if s.Endpoint[0] == '/' {
+		contents, err = getPagerDutyResultsFromFile(s)
 	} else {
-		contents, err = getPagerDutyResultsFromPagerDuty(endpoint)
+		contents, err = getPagerDutyResultsFromPagerDuty(s)
 	}
 	log.Debugf("FetchPagerDutyEvents: contents: %q", contents)
 
@@ -96,16 +96,24 @@ func FetchPagerDutyEvents(endpoint string) ([]interface{}, error) {
 
 }
 
-func getPagerDutyResultsFromFile(file string) (contents []byte, err error) {
-	contents, err = ioutil.ReadFile(file)
+func getPagerDutyResultsFromFile(s *Source) (contents []byte, err error) {
+	contents, err = ioutil.ReadFile(s.Endpoint)
 	if err != nil {
 		return nil, err
 	}
 	return contents, nil
 }
 
-func getPagerDutyResultsFromPagerDuty(endpoint string) (contents []byte, err error) {
-	resp, err := http.Get(fmt.Sprintf("%s/incidents", endpoint))
+func getPagerDutyResultsFromPagerDuty(s *Source) (contents []byte, err error) {
+	queryParams := "?status=triggered,acknowledged"
+	opts := s.Options
+	token := opts["token"]
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/api/v1/incidents%s", s.Endpoint, queryParams)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Add("Authorization", fmt.Sprintf("Token token=%s", token))
+	resp, err := client.Do(req)
+
 	if err != nil {
 		return nil, err
 	}

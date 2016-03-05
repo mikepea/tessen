@@ -18,12 +18,12 @@ type ShowDetailPage struct {
 	CommandBarFragment
 	StatusBarFragment
 	EventId string
-	Source  Source
+	Source  *Source
 	event   interface{}
 	opts    map[string]interface{}
 }
 
-func FetchEvent(id string, source Source) interface{} {
+func FetchEvent(id string, source *Source) interface{} {
 	if source.Provider == "uchiwa" {
 		return FetchUchiwaEvent(id, source)
 	} else if source.Provider == "pagerduty" {

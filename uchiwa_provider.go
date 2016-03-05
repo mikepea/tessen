@@ -59,7 +59,7 @@ func GetFilteredListOfUchiwaEvents(query Query, data *interface{}) []interface{}
 	return results
 }
 
-func FetchUchiwaEvent(id string, source Source) interface{} {
+func FetchUchiwaEvent(id string, source *Source) interface{} {
 	eventData := source.CachedData.([]interface{})
 	for _, ev := range eventData {
 		event := ev.(map[string]interface{})
@@ -70,14 +70,14 @@ func FetchUchiwaEvent(id string, source Source) interface{} {
 	return nil
 }
 
-func FetchUchiwaEvents(endpoint string) ([]interface{}, error) {
+func FetchUchiwaEvents(s *Source) ([]interface{}, error) {
 	var contents []byte
 	var err error
-	log.Debugf("FetchUchiwaEvents: %s", endpoint[7:])
-	if endpoint[:7] == "file://" {
-		contents, err = getUchiwaResultsFromFile(endpoint[7:])
+	log.Debugf("FetchUchiwaEvents: %s %s", s.Name, s.Endpoint)
+	if s.Endpoint[0] == '/' {
+		contents, err = getUchiwaResultsFromFile(s)
 	} else {
-		contents, err = getUchiwaResultsFromUchiwa(endpoint)
+		contents, err = getUchiwaResultsFromUchiwa(s)
 	}
 
 	if err != nil {
@@ -91,16 +91,16 @@ func FetchUchiwaEvents(endpoint string) ([]interface{}, error) {
 
 }
 
-func getUchiwaResultsFromFile(file string) (contents []byte, err error) {
-	contents, err = ioutil.ReadFile(file)
+func getUchiwaResultsFromFile(s *Source) (contents []byte, err error) {
+	contents, err = ioutil.ReadFile(s.Endpoint)
 	if err != nil {
 		return nil, err
 	}
 	return contents, nil
 }
 
-func getUchiwaResultsFromUchiwa(endpoint string) (contents []byte, err error) {
-	resp, err := http.Get(fmt.Sprintf("%s/events", endpoint))
+func getUchiwaResultsFromUchiwa(s *Source) (contents []byte, err error) {
+	resp, err := http.Get(fmt.Sprintf("%s/events", s.Endpoint))
 	if err != nil {
 		return nil, err
 	}

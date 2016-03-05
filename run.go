@@ -81,6 +81,7 @@ type Source struct {
 	Name       string
 	Provider   string
 	Endpoint   string
+	Options    map[string]string
 	CachedData interface{}
 }
 
@@ -127,7 +128,13 @@ func getSources(opts map[string]interface{}) []*Source {
 		name := source["name"].(string)
 		endpoint := source["endpoint"].(string)
 		provider := source["provider"].(string)
-		sources = append(sources, &Source{name, provider, endpoint, nil})
+		options := make(map[string]string)
+		if source["options"] != nil {
+			for k, v := range source["options"].(map[interface{}]interface{}) {
+				options[k.(string)] = v.(string)
+			}
+		}
+		sources = append(sources, &Source{name, provider, endpoint, options, nil})
 	}
 	return sources
 }
@@ -138,10 +145,10 @@ func collectSource(s *Source, seconds int) {
 	var err error
 	if s.Provider == "uchiwa" {
 		log.Debugf("Collecting uchiwa data")
-		s.CachedData, err = FetchUchiwaEvents(s.Endpoint)
+		s.CachedData, err = FetchUchiwaEvents(s)
 	} else if s.Provider == "pagerduty" {
 		log.Debugf("Collecting pagerduty data")
-		s.CachedData, err = FetchPagerDutyEvents(s.Endpoint)
+		s.CachedData, err = FetchPagerDutyEvents(s)
 	} else {
 		log.Errorf("Cannot collect from source %q, unimplemented backend type %q", s.Name, s.Provider)
 	}
