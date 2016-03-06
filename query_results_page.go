@@ -1,12 +1,8 @@
 package tessen
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"os/exec"
 	"regexp"
-	"strings"
 
 	ui "github.com/gizak/termui"
 )
@@ -24,50 +20,19 @@ type QueryResultsPage struct {
 	ActiveQuery Query
 }
 
-func GetFilteredListOfEvents(query Query, eventData *[]map[string]interface{}) []interface{} {
-	templateName := "event_list"
-	if query.Template != "" {
-		templateName = query.Template
+func GetQueryResults(query Query) []interface{} {
+	s := FindSourceByName(query.Source.Name)
+	if s == nil {
+		return nil
 	}
-	template := GetTemplate(templateName)
-	if template == "" {
-		template = GetTemplate("event_list")
+	if s.Provider == "uchiwa" {
+		return GetFilteredListOfUchiwaEvents(query, &s.CachedData)
+	} else if s.Provider == "pagerduty" {
+		return GetFilteredListOfPagerDutyEvents(query, &s.CachedData)
+	} else {
+		log.Errorf("Unsupported provider %q", s.Provider)
+		return nil
 	}
-	results := make([]interface{}, 0)
-	b, err := json.Marshal(*eventData)
-	if err != nil {
-		log.Errorf("%s", err)
-		return results
-	}
-
-	cmd := exec.Command("jq", fmt.Sprintf(".[] | select( %s ) | ._id", query.Filter))
-	cmd.Stdin = bytes.NewReader(b)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err = cmd.Run()
-	if err != nil {
-		log.Errorf("%s", err)
-		return results
-	}
-
-	for _, v := range strings.Split(out.String(), "\n") {
-		id := strings.Trim(v, "\"")
-		for _, ev := range *eventData {
-			if ev["_id"].(string) == id {
-				id := strings.Trim(v, "\"")
-				buf := new(bytes.Buffer)
-				RunTemplate(template, ev, buf)
-				results = append(results, QueryResult{id, buf.String(), ev})
-				continue
-			}
-		}
-	}
-
-	if len(results) == 0 {
-		results = append(results, QueryResult{"", "No results found", nil})
-	}
-	return results
-
 }
 
 func (p *QueryResultsPage) GetSelectedQueryResultId() string {
@@ -108,6 +73,7 @@ func (p *QueryResultsPage) SelectItem() {
 	}
 	q := new(ShowDetailPage)
 	q.EventId = id
+	q.Source = p.ActiveQuery.Source
 	currentPage = q
 	q.Create()
 	changePage()
@@ -138,6 +104,9 @@ func (p *QueryResultsPage) Refresh() {
 }
 
 func (p *QueryResultsPage) markActiveLine() {
+	if p.cachedResults == nil {
+		return
+	}
 	for i, v := range p.cachedResults.([]interface{}) {
 		selected := ""
 		s := v.(QueryResult).Summary
@@ -169,7 +138,7 @@ func (p *QueryResultsPage) Create() {
 		p.commandBar = commandBar
 	}
 	if p.cachedResults == nil {
-		p.cachedResults = GetFilteredListOfEvents(p.ActiveQuery, &eventData)
+		p.cachedResults = GetQueryResults(p.ActiveQuery)
 	}
 	if p.selectedLine >= len(p.cachedResults.([]interface{})) {
 		p.selectedLine = len(p.cachedResults.([]interface{})) - 1

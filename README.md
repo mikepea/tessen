@@ -13,12 +13,20 @@ A lot of this code is shared with
 and code from the excellent [go-jira](https://github.com/Netflix-Skunkworks/go-jira) library
 (though does not depend on it)
 
-In order to use this, you should configure an uchiwa 'endpoint' to retrieve
-event data from:
+In order to use this, you should configure at least one 'source',
+with endpoint and provider, to retrieve event data from, along with at least
+one query against that source:
 
     $ cat ~/.tessen.d/config.yml
     ---
-    endpoint: http://uchiwa.example.com:3001/
+    sources:
+      - name: example-uchiwa
+        provider: uchiwa
+        endpoint: http://uchiwa.example.com:3001/
+    queries:
+      - name: All Uchiwa
+        source: example-uchiwa
+        filter: true
 
 This should be all that's needed to get going.
 
@@ -92,12 +100,17 @@ tessen reads its own `config.yml` file in its .tessen.d directories:
 
     $ cat ~/.tessen.d/config.yml:
     ---
-    endpoint: http://uchiwa.example.com:3001
+    sources:
+      - name: example-uchiwa
+        provider: uchiwa
+        endpoint: http://uchiwa.example.com:3001/
     queries:
-      - name:  'page is set'
-        query: '.query.page == true'
-      - name:  'team is webdev and not paging'
-        query: '.query.team == "webdev" and .query.page == false'
+      - name:   'page is set'
+        filter: '.query.page == true'
+        source: 'example-uchiwa'
+      - name:   'team is webdev and not paging'
+        filter: '.query.team == "webdev" and .query.page == false'
+        source: 'example-uchiwa'
 
 Learning JQ is highly recommended. See [the JQ
 manual](https://stedolan.github.io/jq/manual/) and

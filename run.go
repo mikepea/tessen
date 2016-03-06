@@ -77,6 +77,14 @@ type Navigable interface {
 	Id() string
 }
 
+type Source struct {
+	Name       string
+	Provider   string
+	Endpoint   string
+	Options    map[string]string
+	CachedData interface{}
+}
+
 var currentPage Navigable
 var previousPage Navigable
 
@@ -103,12 +111,60 @@ func changePage() {
 }
 
 var (
-	log    = logging.MustGetLogger("uchiwaui")
+	log    = logging.MustGetLogger("tessen")
 	format = "%{color}%{time:2006-01-02T15:04:05.000Z07:00} %{level:-5s} [%{shortfile}]%{color:reset} %{message}"
 )
 
 var cliOpts map[string]interface{}
-var eventData []map[string]interface{}
+var sources []*Source
+
+func getSources(opts map[string]interface{}) []*Source {
+	if _, ok := opts["sources"]; !ok {
+		log.Fatal("No sources specified, exiting")
+	}
+	sources = make([]*Source, 0)
+	for _, s := range opts["sources"].([]interface{}) {
+		source := s.(map[interface{}]interface{})
+		name := source["name"].(string)
+		endpoint := source["endpoint"].(string)
+		provider := source["provider"].(string)
+		options := make(map[string]string)
+		if source["options"] != nil {
+			for k, v := range source["options"].(map[interface{}]interface{}) {
+				options[k.(string)] = v.(string)
+			}
+		}
+		sources = append(sources, &Source{name, provider, endpoint, options, nil})
+	}
+	return sources
+}
+
+func collectSource(s *Source, seconds int) {
+	timer := time.NewTimer(time.Duration(seconds) * time.Second)
+	<-timer.C
+	var err error
+	if s.Provider == "uchiwa" {
+		log.Debugf("Collecting uchiwa data")
+		s.CachedData, err = FetchUchiwaEvents(s)
+	} else if s.Provider == "pagerduty" {
+		log.Debugf("Collecting pagerduty data")
+		s.CachedData, err = FetchPagerDutyEvents(s)
+	} else {
+		log.Errorf("Cannot collect from source %q, unimplemented backend type %q", s.Name, s.Provider)
+	}
+	if err != nil {
+		log.Errorf("Error fetching source data for %q: %q\n", s.Name, err)
+	}
+}
+
+func FindSourceByName(name string) *Source {
+	for _, s := range sources {
+		if s.Name == name {
+			return s
+		}
+	}
+	return nil
+}
 
 func Run() {
 
@@ -131,12 +187,10 @@ func Run() {
 		}
 		output := fmt.Sprintf(`
 Usage:
-  uchiwa-ui
+  tessen
 
 General Options:
-  -e --endpoint=URI   URI to use for uchiwa
   -h --help           Show this usage
-  -u --user=USER      Username to use for authenticaion
   -v --verbose        Increase output logging
   --version           Print version
 
@@ -144,10 +198,7 @@ General Options:
 		printer(output)
 	}
 
-	commands := map[string]string{
-		"list": "list",
-		"ls":   "list",
-	}
+	commands := map[string]string{}
 
 	cliOpts = make(map[string]interface{})
 	setopt := func(name string, value interface{}) {
@@ -163,15 +214,8 @@ General Options:
 		"v|verbose+": func() {
 			logging.SetLevel(logging.GetLevel("")+1, "")
 		},
-		"u|user=s":        setopt,
-		"endpoint=s":      setopt,
-		"l|listen=s":      setopt,
-		"noui":            setopt,
-		"q|query=s":       setopt,
-		"f|queryfields=s": setopt,
-		"t|template=s":    setopt,
-		"m|max_wrap=i":    setopt,
-		"skip_login":      setopt,
+		"l|listen=s": setopt,
+		"noui":       setopt,
 	})
 
 	if err := op.ProcessAll(os.Args[1:]); err != nil {
@@ -194,18 +238,7 @@ General Options:
 	}
 
 	opts := getOpts()
-	var endpoint string
-	if e, ok := opts["endpoint"]; e.(string) != "" && ok {
-		endpoint = e.(string)
-		eventData, err = FetchUchiwaEvents(endpoint)
-		if err != nil {
-			fmt.Printf("Error fetching Uchiwa events: %q\n", err)
-			os.Exit(1)
-		}
-	} else {
-		fmt.Printf("Must set endpoint via options or in .tessen.d/config.yml\n")
-		os.Exit(1)
-	}
+	sources := getSources(opts)
 
 	if _, ok := opts["noui"]; !ok {
 		err = ui.Init()
@@ -221,12 +254,6 @@ General Options:
 		commandBar = new(CommandBar)
 
 		switch command {
-		case "list":
-			queryResultsPage = new(QueryResultsPage)
-			if query := cliOpts["query"]; query == nil {
-				log.Error("Must supply a --query option to %q", command)
-				os.Exit(1)
-			}
 		case "toplevel":
 			currentPage = queryPage
 		default:
@@ -235,19 +262,22 @@ General Options:
 		}
 	}
 
-	go func() {
-		for {
-			timer := time.NewTimer(time.Duration(defaultRefreshInterval) * time.Second)
-			<-timer.C
-			eventData, err = FetchUchiwaEvents(endpoint)
-			if err != nil {
-				log.Errorf("Error fetching Uchiwa events: %q\n", err)
+	for _, s := range sources {
+		collectSource(s, 0)
+	}
+
+	for _, s := range sources {
+		go func() {
+			for {
+				collectSource(s, defaultRefreshInterval)
+				// TODO: we need a way of calling this only if the data has changed, or if the
+				//  'currentPage' relates to this dataset.
+				if obj, ok := currentPage.(Refresher); ok {
+					obj.Refresh()
+				}
 			}
-			if obj, ok := currentPage.(Refresher); ok {
-				obj.Refresh()
-			}
-		}
-	}()
+		}()
+	}
 
 	if l, ok := opts["listen"]; ok {
 		log.Debugf("Starting http dashboard on %s", l.(string))
