@@ -33,11 +33,15 @@ func FetchEvent(id string, source *Source) interface{} {
 	}
 }
 
-func GetEventAsLines(data interface{}) []interface{} {
+func GetEventAsLines(s *Source, data interface{}) []interface{} {
 	buf := new(bytes.Buffer)
 	results := make([]interface{}, 0)
-	//template := GetTemplate("event_view")
 	template := GetTemplate("debug")
+	if s.Provider == "uchiwa" {
+		template = GetTemplate("uchiwa_event_view")
+	} else if s.Provider == "pagerduty" {
+		template = GetTemplate("pagerduty_incident_view")
+	}
 	log.Debugf("GetEventAsLines: data = %q", data)
 	log.Debugf("GetEventAsLines: template = %q", template)
 	RunTemplate(template, data, buf)
@@ -155,7 +159,7 @@ func (p *ShowDetailPage) Create() {
 		p.event = FetchEvent(p.EventId, p.Source)
 	}
 	if p.cachedResults == nil {
-		p.cachedResults = GetEventAsLines(p.event)
+		p.cachedResults = GetEventAsLines(p.Source, p.event)
 	}
 	p.displayLines = make([]string, len(p.cachedResults.([]interface{})))
 	if p.selectedLine >= len(p.cachedResults.([]interface{})) {

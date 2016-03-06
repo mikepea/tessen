@@ -21,7 +21,7 @@ func GetFilteredListOfUchiwaEvents(query Query, data *interface{}) []interface{}
 	}
 	template := GetTemplate(templateName)
 	if template == "" {
-		template = GetTemplate("event_list")
+		template = GetTemplate("uchiwa_event_list")
 	}
 	b, err := json.Marshal(*data)
 	if err != nil {
