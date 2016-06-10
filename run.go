@@ -12,6 +12,7 @@ import (
 
 var exitNow = false
 var defaultRefreshInterval = 30
+var refreshEnabled = true
 
 type EditPager interface {
 	DeleteRuneBackward()
@@ -247,7 +248,7 @@ General Options:
 		}
 		defer ui.Close()
 
-		registerKeyboardHandlers()
+		registerEventHandlers()
 
 		queryPage = new(QueryPage)
 		helpPage = new(HelpPage)
@@ -273,7 +274,9 @@ General Options:
 				// TODO: we need a way of calling this only if the data has changed, or if the
 				//  'currentPage' relates to this dataset.
 				if obj, ok := currentPage.(Refresher); ok {
-					obj.Refresh()
+					if refreshEnabled {
+						obj.Refresh()
+					}
 				}
 			}
 		}()

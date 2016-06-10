@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	ui "github.com/gizak/termui"
@@ -29,6 +30,34 @@ func parseYaml(file string, v map[string]interface{}) {
 		log.Debugf("Parsing YAML file: %s", file)
 		yaml.Unmarshal(fh, &v)
 	}
+}
+
+func ShellOut() {
+	log.Debug("ShellOut()")
+	stty := exec.Command("stty", "-f", "/dev/tty", "echo", "opost")
+	_ = stty.Run()
+
+	//cmd := exec.Command("vim", "/etc/group")
+	cmd := exec.Command("bash")
+	//cmd := exec.Command("/bin/echo", "hello")
+	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stty = exec.Command("stty", "-f", "/dev/tty", "-echo", "-opost")
+	_ = stty.Run()
+
+}
+
+func runShellCommand() {
+	refreshEnabled = false
+	deregisterEventHandlers()
+	ShellOut()
+	registerEventHandlers()
+	refreshEnabled = true
+	changePage()
 }
 
 func FindParentPaths(fileName string) []string {
