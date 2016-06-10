@@ -7,7 +7,9 @@ var all_templates = map[string]string{
 	"uchiwa_event_view":       uchiwa_event_view_template,
 	"pagerduty_incident_list": pagerduty_incident_list_template,
 	"pagerduty_incident_view": default_debug_template,
-	"help": default_help_template,
+	"chronos_job_list":        chronos_job_list_template,
+	"chronos_job_view":        default_debug_template,
+	"help":                    default_help_template,
 	"event_http_dashboard_home": default_event_http_dashboard_home_template,
 }
 
@@ -17,6 +19,7 @@ const (
 	uchiwa_event_list_template       = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
 	uchiwa_team_event_list_template  = `{{ colorizedSensuStatus .check.status | printf "%-6s"}}  [{{ .check.team | printf "%-20s" }}](fg-blue)  [{{ .check.name | printf "%-40s" }}](fg-green)  {{ .client.name }}`
 	pagerduty_incident_list_template = `{{ .id }}  {{.status | printf "%-12s"}}  [{{ .escalation_policy.name | printf "%-40s" }}](fg-green)  [{{if .assigned_to_user}}{{ .assigned_to_user.email | printf "%-20s" }}{{else}}{{ "UNASSIGNED" | printf "%-40s" }}{{end}}](fg-green)  {{ .trigger_summary_data.description }}`
+	chronos_job_list_template        = `[{{ .name | printf "%-60s" }}](fg-green) | {{ (print .cpus .mem .disk) | printf "%-15s" }} | {{.schedule | printf "%-30s" }} {{.epsilon}}`
 	uchiwa_event_view_template       = `
 Event:
   _id:          [{{ ._id }}](fg-blue)

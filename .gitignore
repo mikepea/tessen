@@ -1,6 +1,7 @@
 src/
 bin/
 pkg/
+tmp/
 .tessen.d
 *.swp
 err

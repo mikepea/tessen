@@ -29,6 +29,8 @@ func GetQueryResults(query Query) []interface{} {
 		return GetFilteredListOfUchiwaEvents(query, &s.CachedData)
 	} else if s.Provider == "pagerduty" {
 		return GetFilteredListOfPagerDutyEvents(query, &s.CachedData)
+	} else if s.Provider == "chronos" {
+		return GetFilteredListOfChronosJobs(query, &s.CachedData)
 	} else {
 		log.Errorf("Unsupported provider %q", s.Provider)
 		return nil

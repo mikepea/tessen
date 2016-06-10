@@ -28,6 +28,8 @@ func FetchEvent(id string, source *Source) interface{} {
 		return FetchUchiwaEvent(id, source)
 	} else if source.Provider == "pagerduty" {
 		return FetchPagerDutyEvent(id, source)
+	} else if source.Provider == "chronos" {
+		return FetchChronosJob(id, source)
 	} else {
 		return nil
 	}
